@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "IcDdRK/Q+OQ=",
+  "dgSpecHash": "u8ixh0PwrJ4=",
   "success": true,
-  "projectFilePath": "C:\\Users\\mathe\\Projeto\\API\\API.csproj",
+  "projectFilePath": "C:\\Users\\mathe\\ProjetoOAK\\API\\API.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\mathe\\.nuget\\packages\\azure.core\\1.38.0\\azure.core.1.38.0.nupkg.sha512",
     "C:\\Users\\mathe\\.nuget\\packages\\azure.identity\\1.11.4\\azure.identity.1.11.4.nupkg.sha512",

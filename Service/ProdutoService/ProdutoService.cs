@@ -15,25 +15,22 @@ namespace desafioBoiSaude.Service.ProdutoService
 
         public async Task<ServiceResponse<Produto>> AdicionarProduto(Produto novoProduto)
         {
-            ServiceResponse<Produto> serviceResponse = new ServiceResponse<Produto>();
+            ServiceResponse<Produto> serviceResponse = new();
 
             try
             {
-                List<Produto> produtosAtuais = context.Produtos.ToList();
-                bool jaCadastrado = produtosAtuais.Any(prod => prod.Nome == novoProduto.Nome);
-
-                if (jaCadastrado)
+                if (novoProduto == null || string.IsNullOrWhiteSpace(novoProduto.Nome))
                 {
-                    serviceResponse.DadosProdutos = null;
-                    serviceResponse.Mensagem = "Produto já cadastrado";
+                    serviceResponse.Mensagem = "Produto inválido.";
                     serviceResponse.Sucesso = false;
                     return serviceResponse;
                 }
 
-                if (novoProduto == null)
+                bool jaCadastrado = await context.Produtos.AnyAsync(prod => prod.Nome == novoProduto.Nome);
+
+                if (jaCadastrado)
                 {
-                    serviceResponse.DadosProdutos = null;
-                    serviceResponse.Mensagem = "Produto não colocado corretamente.";
+                    serviceResponse.Mensagem = "Produto já cadastrado.";
                     serviceResponse.Sucesso = false;
                     return serviceResponse;
                 }
@@ -41,7 +38,8 @@ namespace desafioBoiSaude.Service.ProdutoService
                 context.Produtos.Add(novoProduto);
                 await context.SaveChangesAsync();
 
-                serviceResponse.Mensagem = "Produto adicionado.";
+                serviceResponse.DadosProdutos = novoProduto;
+                serviceResponse.Mensagem = "Produto adicionado com sucesso.";
             }
             catch (Exception erro)
             {
@@ -54,22 +52,36 @@ namespace desafioBoiSaude.Service.ProdutoService
 
         public async Task<ServiceResponse<Produto>> AtualizarProduto(Produto produtoAtualizado)
         {
-            ServiceResponse<Produto> serviceResponse = new ServiceResponse<Produto>();
+            ServiceResponse<Produto> serviceResponse = new();
 
             try
             {
-                if (produtoAtualizado == null)
+                if (produtoAtualizado == null || produtoAtualizado.Id == 0)
                 {
-                    serviceResponse.DadosProdutos = null;
-                    serviceResponse.Mensagem = "Produto não colocado corretamente.";
+                    serviceResponse.Mensagem = "Produto inválido.";
                     serviceResponse.Sucesso = false;
+                    return serviceResponse;
                 }
 
-                Produto? produto = context.Produtos.AsNoTracking().FirstOrDefault(pro => pro.Id == produtoAtualizado.Id);
+                var produto = await context.Produtos.FindAsync(produtoAtualizado.Id);
 
-                context.Produtos.Update(produtoAtualizado);
+                if (produto == null)
+                {
+                    serviceResponse.Mensagem = "Produto não encontrado.";
+                    serviceResponse.Sucesso = false;
+                    return serviceResponse;
+                }
+
+                // Atualiza os campos relevantes
+                produto.Nome = produtoAtualizado.Nome;
+                produto.Descricao = produtoAtualizado.Descricao;
+                produto.Preco = produtoAtualizado.Preco;
+                produto.Disponível = produtoAtualizado.Disponível;
+
+                context.Produtos.Update(produto);
                 await context.SaveChangesAsync();
 
+                serviceResponse.DadosProdutos = produto;
                 serviceResponse.Mensagem = "Produto atualizado com sucesso.";
             }
             catch (Exception erro)
@@ -83,24 +95,23 @@ namespace desafioBoiSaude.Service.ProdutoService
 
         public async Task<ServiceResponse<List<Produto>>> DeletarProduto(int id)
         {
-            ServiceResponse<List<Produto>> serviceResponse = new ServiceResponse<List<Produto>>();
+            ServiceResponse<List<Produto>> serviceResponse = new();
 
             try
             {
-                Produto? produto = context.Produtos.FirstOrDefault(pro => pro.Id == id);
+                var produto = await context.Produtos.FindAsync(id);
 
                 if (produto == null)
                 {
-                    serviceResponse.DadosProdutos = null;
-                    serviceResponse.Mensagem = "Produto não cadastrado.";
+                    serviceResponse.Mensagem = "Produto não encontrado.";
                     serviceResponse.Sucesso = false;
-
                     return serviceResponse;
                 }
 
                 context.Produtos.Remove(produto);
                 await context.SaveChangesAsync();
 
+                serviceResponse.DadosProdutos = await context.Produtos.ToListAsync();
                 serviceResponse.Mensagem = "Produto deletado com sucesso.";
             }
             catch (Exception erro)
@@ -114,16 +125,16 @@ namespace desafioBoiSaude.Service.ProdutoService
 
         public async Task<ServiceResponse<List<Produto>>> PegarProdutos()
         {
-            ServiceResponse<List<Produto>> serviceResponse = new ServiceResponse<List<Produto>>();
+            ServiceResponse<List<Produto>> serviceResponse = new();
 
             try
             {
-                serviceResponse.DadosProdutos = context.Produtos.ToList();
+                serviceResponse.DadosProdutos = await context.Produtos.ToListAsync();
             }
             catch (Exception erro)
             {
                 serviceResponse.Sucesso = false;
-                serviceResponse.Mensagem = $"Deu errado {erro}";
+                serviceResponse.Mensagem = $"Erro ao buscar produtos: {erro.Message}";
             }
 
             return serviceResponse;
@@ -131,20 +142,21 @@ namespace desafioBoiSaude.Service.ProdutoService
 
         public async Task<ServiceResponse<Produto>> PegarProdutoId(int id)
         {
-            ServiceResponse<Produto> serviceResponse = new ServiceResponse<Produto>();
+            ServiceResponse<Produto> serviceResponse = new();
 
             try
             {
-                Produto? produtoAtual = context.Produtos.FirstOrDefault(prod => prod.Id == id);
+                var produto = await context.Produtos.FindAsync(id);
 
-                if (produtoAtual == null)
+                if (produto == null)
                 {
-                    serviceResponse.DadosProdutos = null;
-                    serviceResponse.Mensagem = "Esse produto não está cadastrado";
+                    serviceResponse.Mensagem = "Produto não encontrado.";
                     serviceResponse.Sucesso = false;
                 }
-
-                serviceResponse.DadosProdutos = produtoAtual;
+                else
+                {
+                    serviceResponse.DadosProdutos = produto;
+                }
             }
             catch (Exception erro)
             {
@@ -157,22 +169,30 @@ namespace desafioBoiSaude.Service.ProdutoService
 
         public async Task<ServiceResponse<Produto>> PegarProdutoNome(string nome)
         {
-            ServiceResponse<Produto> serviceResponse = new ServiceResponse<Produto>();
+            ServiceResponse<Produto> serviceResponse = new();
 
             try
             {
-                nome = nome.Trim();
-                nome = char.ToUpper(nome[0]) + nome.Substring(1).ToLower();
-
-                Produto? produtoAtual = await context.Produtos.FirstOrDefaultAsync(prod => prod.Nome == nome);
-
-                if (produtoAtual == null)
+                if (string.IsNullOrWhiteSpace(nome))
                 {
-                    serviceResponse.Mensagem = "Esse produto não está cadastrado ou o nome não foi digitado corretamente.";
+                    serviceResponse.Mensagem = "Nome do produto inválido.";
                     serviceResponse.Sucesso = false;
+                    return serviceResponse;
                 }
 
-                serviceResponse.DadosProdutos = produtoAtual;
+                nome = char.ToUpper(nome[0]) + nome.Substring(1).ToLower();
+
+                var produto = await context.Produtos.FirstOrDefaultAsync(prod => prod.Nome == nome);
+
+                if (produto == null)
+                {
+                    serviceResponse.Mensagem = "Produto não encontrado.";
+                    serviceResponse.Sucesso = false;
+                }
+                else
+                {
+                    serviceResponse.DadosProdutos = produto;
+                }
             }
             catch (Exception erro)
             {
@@ -185,24 +205,32 @@ namespace desafioBoiSaude.Service.ProdutoService
 
         public async Task<ServiceResponse<List<Produto>>> DeletarProdutoNome(string nome)
         {
-            ServiceResponse<List<Produto>> serviceResponse = new ServiceResponse<List<Produto>>();
+            ServiceResponse<List<Produto>> serviceResponse = new();
 
             try
             {
-                nome = nome.Trim();
-                nome = char.ToUpper(nome[0]) + nome.Substring(1).ToLower();
-
-                Produto? produtoAtual = await context.Produtos.FirstOrDefaultAsync(prod => prod.Nome == nome);
-
-                if (produtoAtual == null)
+                if (string.IsNullOrWhiteSpace(nome))
                 {
-                    serviceResponse.Mensagem = "Esse produto não está cadastrado ou o nome não foi digitado corretamente.";
+                    serviceResponse.Mensagem = "Nome do produto inválido.";
                     serviceResponse.Sucesso = false;
+                    return serviceResponse;
                 }
 
-                context.Produtos.Remove(produtoAtual);
+                nome = char.ToUpper(nome[0]) + nome.Substring(1).ToLower();
+
+                var produto = await context.Produtos.FirstOrDefaultAsync(prod => prod.Nome == nome);
+
+                if (produto == null)
+                {
+                    serviceResponse.Mensagem = "Produto não encontrado.";
+                    serviceResponse.Sucesso = false;
+                    return serviceResponse;
+                }
+
+                context.Produtos.Remove(produto);
                 await context.SaveChangesAsync();
 
+                serviceResponse.DadosProdutos = await context.Produtos.ToListAsync();
                 serviceResponse.Mensagem = "Produto deletado com sucesso.";
             }
             catch (Exception erro)

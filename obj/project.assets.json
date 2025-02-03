@@ -5231,11 +5231,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\mathe\\Projeto\\API\\API.csproj",
+      "projectUniqueName": "C:\\Users\\mathe\\ProjetoOAK\\API\\API.csproj",
       "projectName": "API",
-      "projectPath": "C:\\Users\\mathe\\Projeto\\API\\API.csproj",
+      "projectPath": "C:\\Users\\mathe\\ProjetoOAK\\API\\API.csproj",
       "packagesPath": "C:\\Users\\mathe\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\mathe\\Projeto\\API\\obj\\",
+      "outputPath": "C:\\Users\\mathe\\ProjetoOAK\\API\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\mathe\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -5319,7 +5319,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.404/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.405/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
